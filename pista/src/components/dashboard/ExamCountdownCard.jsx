@@ -21,7 +21,7 @@ function Countdown({ iso }) {
   const { d, h, m } = useCountdown(iso);
   const cell = (v, l) => (
     <div className="flex-1 rounded-xl bg-surface py-2 text-center">
-      <div className="font-display text-xl font-bold tabular-nums">{String(v).padStart(2, "0")}</div>
+      <div className="font-display text-xl font-bold tabular-nums tracking-tight">{String(v).padStart(2, "0")}</div>
       <div className="text-[11px] font-medium text-muted">{l}</div>
     </div>
   );
@@ -59,7 +59,18 @@ export default function ExamCountdownCard({ exams, loading, error, onRetry }) {
           <span className="font-semibold">{next.preparedness}%</span>
         </div>
         <ProgressBar value={next.preparedness} label="Exam preparedness" />
-        <Link to="/exams" className="mt-4 inline-block text-sm font-semibold text-brand-600 hover:underline">See all exams</Link>
+        <Link
+          to="/exams"
+          className="group mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-600 transition-colors duration-150 hover:text-brand-700"
+        >
+          See all exams
+          <span
+            className="transition-transform duration-150 group-hover:translate-x-0.5"
+            aria-hidden
+          >
+            →
+          </span> 
+        </Link>
       </div>
     </section>
   );

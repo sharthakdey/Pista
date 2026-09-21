@@ -37,12 +37,12 @@ const ChatComposer = forwardRef(function ChatComposer({ value, onChange, onSend,
         />
         {busy ? (
           <button type="button" onClick={onStop} aria-label="Stop response"
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-ink-900 text-white transition hover:bg-ink-800">
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-ink-900 text-white transition duration-150 ease-out hover:bg-ink-800 active:scale-95">
             <Square className="h-4 w-4 fill-current" />
           </button>
         ) : (
           <button type="button" onClick={submit} disabled={!value.trim()} aria-label="Send message"
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-brand-600 text-white shadow-glow transition hover:bg-brand-700 disabled:bg-ink-900/10 disabled:text-ink-400 disabled:shadow-none">
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-brand-600 text-white shadow-glow transition duration-150 ease-out hover:bg-brand-700 active:scale-95 disabled:bg-ink-900/10 disabled:text-ink-400 disabled:shadow-none">
             <ArrowUp className="h-5 w-5" />
           </button>
         )}

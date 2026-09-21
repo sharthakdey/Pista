@@ -35,27 +35,64 @@ export default function Sidebar({ collapsed = false, onToggle, onNavigate, showT
       )}
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-2 scrollbar-thin">
-        {NAV_ITEMS.map(({ to, label, icon: Icon, highlight }) => (
-          <NavLink
-            key={to} to={to} onClick={onNavigate} title={collapsed ? label : undefined}
-            className={({ isActive }) =>
-              `group relative flex h-11 items-center gap-3 rounded-xl text-[15px] font-medium transition
-              ${collapsed ? "justify-center" : "px-3.5"}
-              ${isActive ? "bg-white/[.08] text-white" : "hover:bg-white/[.04] hover:text-white"}`
-            }
-          >
-            {({ isActive }) => (
-              <>
-                {isActive && <span className="absolute left-0 top-2.5 h-6 w-1 rounded-r-full bg-gradient-to-b from-electric-400 to-violet-400" aria-hidden />}
-                <Icon className={`h-5 w-5 shrink-0 ${isActive ? "text-electric-400" : highlight ? "text-violet-400" : ""}`} aria-hidden />
-                {!collapsed && <span className="flex-1">{label}</span>}
-                {!collapsed && highlight && !isActive && (
-                  <span className="rounded-md bg-violet-500/20 px-1.5 py-0.5 text-[11px] font-semibold text-violet-400">AI</span>
+        {NAV_ITEMS.map(
+          ({ to, label, icon: Icon, highlight, section }, index) => (
+            <div key={to}>
+              {!collapsed &&
+                (index === 0 ||
+                  NAV_ITEMS[index - 1].section !== section) && (
+                  <div className="px-3.5 pb-1 pt-4 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-500">
+                    {section}
+                  </div>
                 )}
-              </>
-            )}
-          </NavLink>
-        ))}
+
+              <NavLink
+                to={to}
+                onClick={onNavigate}
+                title={collapsed ? label : undefined}
+                className={({ isActive }) =>
+                  `group relative flex h-11 items-center gap-3 rounded-xl text-[15px] font-medium transition
+          ${collapsed ? "justify-center" : "px-3.5"}
+          ${isActive
+                    ? "bg-white/[.08] text-white"
+                    : "hover:bg-white/[.04] hover:text-white"
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    {isActive && (
+                      <span
+                        className="absolute left-0 top-2.5 h-6 w-1 rounded-r-full bg-gradient-to-b from-electric-400 to-violet-400"
+                        aria-hidden
+                      />
+                    )}
+
+                    <Icon
+                      className={`h-5 w-5 shrink-0 ${isActive
+                        ? "text-electric-400"
+                        : highlight
+                          ? "text-violet-400"
+                          : ""
+                        }`}
+                      aria-hidden
+                    />
+
+                    {!collapsed && (
+                      <span className="flex-1">{label}</span>
+                    )}
+
+                    {!collapsed && highlight && !isActive && (
+                      <span className="rounded-md bg-violet-500/20 px-1.5 py-0.5 text-[11px] font-semibold text-violet-400">
+                        AI
+                      </span>
+                    )}
+                  </>
+                )}
+              </NavLink>
+            </div>
+          )
+        )}
       </nav>
 
       <div className="border-t border-white/[.06] p-3">

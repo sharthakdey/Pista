@@ -23,6 +23,7 @@ export default function Tutor() {
   const [pending, setPending] = useState(false);
   const [stopId, setStopId] = useState(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyCollapsed, setHistoryCollapsed] = useState(false);
   const abortRef = useRef(null);
   const scrollRef = useRef(null);
   const listRef = useRef(null);
@@ -113,6 +114,7 @@ export default function Tutor() {
   };
 
   const firstName = student?.name?.split(" ")[0];
+
   const historyPanel = (
     <ConversationList
       conversations={convos.conversations}
@@ -120,13 +122,19 @@ export default function Tutor() {
       onSelect={(id) => { if (!busy) { convos.setActiveId(id); setHistoryOpen(false); } }}
       onNew={newConversation}
       onDelete={convos.remove}
+      collapsed={historyCollapsed}
+      onToggle={() => setHistoryCollapsed((value) => !value)}
     />
   );
 
   return (
     <div className="flex h-[calc(100dvh-56px-64px-env(safe-area-inset-bottom))] md:h-dvh">
       {/* History (desktop) */}
-      <aside className="hidden w-[280px] shrink-0 border-r border-line bg-white xl:block" aria-label="Conversation history">
+      <aside
+        className={`hidden shrink-0 border-r border-line bg-white transition-[width] duration-200 xl:block ${historyCollapsed ? "w-[56px]" : "w-[280px]"
+          }`}
+        aria-label="Conversation history"
+      >
         {historyPanel}
       </aside>
 
@@ -153,10 +161,10 @@ export default function Tutor() {
             </div>
           </div>
           <div className="flex shrink-0 gap-1.5">
-            <button onClick={newConversation} className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-line bg-white px-3 text-sm font-semibold hover:bg-brand-50 xl:hidden" aria-label="New conversation">
+            <button onClick={newConversation} className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-line bg-white px-3 text-sm font-semibold transition duration-150 ease-out hover:border-brand-200 hover:bg-brand-50 active:scale-[.98] xl:hidden" aria-label="New conversation">
               <Plus className="h-4 w-4" /><span className="hidden sm:inline">New</span>
             </button>
-            <button onClick={() => setHistoryOpen(true)} className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-line bg-white px-3 text-sm font-semibold hover:bg-brand-50 xl:hidden" aria-label="Conversation history">
+            <button onClick={() => setHistoryOpen(true)} className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-line bg-white px-3 text-sm font-semibold transition duration-150 ease-out hover:border-brand-200 hover:bg-brand-50 active:scale-[.98] xl:hidden" aria-label="Conversation history">
               <History className="h-4 w-4" /><span className="hidden sm:inline">History</span>
             </button>
           </div>

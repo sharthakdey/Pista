@@ -12,7 +12,18 @@ export default function SubjectsCard({ progress, loading, error, onRetry }) {
     <section className="card p-5 sm:p-6" aria-labelledby="subjects-title">
       <div className="flex items-center justify-between">
         <h2 id="subjects-title" className="font-sans text-sm font-semibold text-muted">Subjects</h2>
-        <Link to="/progress" className="text-sm font-semibold text-brand-600 hover:underline">Details</Link>
+        <Link
+          to="/progress"
+          className="group inline-flex items-center gap-1 text-sm font-semibold text-brand-600 transition-colors duration-150 hover:text-brand-700"
+        >
+          Details
+          <span
+            className="transition-transform duration-150 group-hover:translate-x-0.5"
+            aria-hidden
+          >
+            →
+          </span>
+        </Link>
       </div>
       <ul className="mt-4 space-y-3.5">
         {subjects.map((s) => (

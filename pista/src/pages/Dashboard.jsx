@@ -20,17 +20,24 @@ export default function Dashboard() {
 
   return (
     <>
-      <header className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
+      <header className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between lg:mb-10">
         <div>
           <h1 className="text-[28px] font-bold leading-tight sm:text-[36px]">
             {greeting()}, {firstName} <span aria-hidden>👋</span>
           </h1>
           <p className="mt-1.5 text-[15px] text-muted">Let's make today's study session count.</p>
         </div>
-        <Button to="/tutor" variant="secondary" icon={Sparkles} className="self-start sm:self-auto">Ask PISTA</Button>
+        <Button
+          to="/tutor"
+          variant="secondary"
+          icon={Sparkles}
+          className="self-start sm:self-auto lg:hover:-translate-y-0.5"
+        >
+          Ask PISTA
+        </Button>
       </header>
 
-      <div className="grid gap-4 lg:grid-cols-3 lg:gap-5">
+      <div className="grid gap-4 lg:grid-cols-3 lg:gap-6">
         <div className="lg:col-span-2">
           <RecommendationCard data={rec.data} loading={rec.loading} error={rec.error} onRetry={rec.reload} />
         </div>

@@ -23,7 +23,7 @@ export default function Button({
   to, className = "", children, disabled, ...rest
 }) {
   const cls = `inline-flex select-none items-center justify-center whitespace-nowrap font-semibold transition
-    duration-150 active:scale-[.98] disabled:pointer-events-none disabled:opacity-50 ${VARIANTS[variant]} ${SIZES[size]} ${className}`;
+  duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 active:scale-[.98] disabled:pointer-events-none disabled:opacity-50 ${VARIANTS[variant]} ${SIZES[size]} ${className}`;
   const content = (
     <>
       {loading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : Icon && <Icon className="h-4 w-4 shrink-0" aria-hidden />}

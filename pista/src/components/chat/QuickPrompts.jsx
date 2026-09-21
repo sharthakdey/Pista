@@ -29,7 +29,7 @@ export function QuickPromptChips({ onPick, disabled }) {
     <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 scrollbar-thin">
       {QUICK_PROMPTS.map(({ text, icon: Icon }) => (
         <button key={text} disabled={disabled} onClick={() => onPick(text)}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1.5 text-[13px] font-medium text-ink-700 transition hover:border-brand-200 hover:text-brand-700 disabled:opacity-50">
+          className="group inline-flex shrink-0 items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1.5 text-[13px] font-medium text-ink-700 transition duration-150 ease-out hover:-translate-y-0.5 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 active:scale-[.98] disabled:pointer-events-none disabled:opacity-50">
           <Icon className="h-3.5 w-3.5" aria-hidden />{text}
         </button>
       ))}

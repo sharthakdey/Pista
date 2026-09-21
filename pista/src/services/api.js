@@ -109,9 +109,27 @@ export function generateQuiz(params) {
   return createQuiz(params);
 }
 
+
 export function createQuiz(params) {
-  return DEMO_MODE ? demo.createQuiz(params) : request(ENDPOINTS.quizzes, { method: "POST", body: params });
+  if (DEMO_MODE) return demo.createQuiz(params);
+  
+  // ALWAYS use FormData because the backend expects Form fields
+  const form = new FormData();
+  form.append("topic", params.topic || "");
+  form.append("subject", params.subject || "General");
+  form.append("difficulty", params.difficulty || "medium");
+  form.append("numQuestions", String(params.numQuestions || 5));
+  
+  // Only append the file if the user actually selected one
+  if (params.file) {
+    form.append("file", params.file);
+  }
+  
+  // Use the upload helper (which handles multipart/form-data correctly)
+  return upload(ENDPOINTS.quizzes, form, () => {});
 }
+
+
 
 /**
  * @param {string} quizId

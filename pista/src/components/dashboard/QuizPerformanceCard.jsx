@@ -1,5 +1,5 @@
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown, ArrowRight } from "lucide-react";
 import { CardSkeleton } from "../ui/Skeleton.jsx";
 import { ErrorState, EmptyState } from "../ui/StateViews.jsx";
 import Button from "../ui/Button.jsx";
@@ -23,7 +23,15 @@ export default function QuizPerformanceCard({ progress, loading, error, onRetry 
   if (!history.length) {
     return (
       <EmptyState emoji="📝" title="No quizzes yet" className="h-full !py-8"
-        action={<Button to="/quiz" size="sm">Take Your First Quiz</Button>} />
+        action={
+          <Button
+            to="/quiz"
+            size="sm"
+            iconRight={ArrowRight}
+          >
+            Take Your First Quiz
+          </Button>
+        } />
     );
   }
   const latest = history[history.length - 1];
@@ -34,7 +42,7 @@ export default function QuizPerformanceCard({ progress, loading, error, onRetry 
     <section className="card flex h-full flex-col p-5 sm:p-6" aria-labelledby="quizperf-title">
       <h2 id="quizperf-title" className="font-sans text-sm font-semibold text-muted">Quiz performance</h2>
       <div className="mt-2 flex items-end gap-3">
-        <span key={latest.id} className="animate-pop-in font-display text-[44px] font-extrabold leading-none tracking-tight">{latest.score}%</span>
+        <span key={latest.id} className="animate-pop-in font-display text-[44px] font-extrabold leading-none tracking-tight transition-transform duration-200 ease-out hover:scale-[1.02]">{latest.score}%</span>
         {prev && (
           <span className={`mb-1.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${up ? "bg-mint-50 text-mint-600" : "bg-coral-50 text-coral-600"}`}>
             {up ? <TrendingUp className="h-3.5 w-3.5" aria-hidden /> : <TrendingDown className="h-3.5 w-3.5" aria-hidden />}

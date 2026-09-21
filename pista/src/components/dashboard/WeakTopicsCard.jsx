@@ -1,4 +1,4 @@
-import { Target } from "lucide-react";
+import { Target, ArrowRight } from "lucide-react";
 import ProgressBar from "../ui/ProgressBar.jsx";
 import Button from "../ui/Button.jsx";
 import { CardSkeleton } from "../ui/Skeleton.jsx";
@@ -22,7 +22,10 @@ export default function WeakTopicsCard({ progress, loading, error, onRetry }) {
           {list.map((w) => {
             const meta = PRIORITY_META[w.priority];
             return (
-              <li key={w.topic} className="animate-fade-in">
+              <li
+                key={w.topic}
+                className="animate-fade-in rounded-xl px-2 py-1.5 transition-colors duration-150 hover:bg-surface"
+              >
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="min-w-0">
                     <span className="block truncate font-semibold">{w.topic}</span>
@@ -37,7 +40,15 @@ export default function WeakTopicsCard({ progress, loading, error, onRetry }) {
         </ul>
       )}
       <div className="mt-auto pt-5">
-        <Button to="/progress#weak-topics" variant="secondary" size="sm" className="w-full">View weak topics</Button>
+        <Button
+          to="/progress#weak-topics"
+          variant="secondary"
+          size="sm"
+          className="w-full"
+          iconRight={ArrowRight}
+        >
+          View weak topics
+        </Button>
       </div>
     </section>
   );

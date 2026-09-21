@@ -111,7 +111,13 @@ export default function RecommendationCard({ data, loading, error, onRetry }) {
             })}
           </ul>
 
-          <Button variant="light" size="lg" className="mt-7" onClick={start} iconRight={ArrowRight}>
+          <Button
+            variant="light"
+            size="lg"
+            className="mt-7 hover:-translate-y-0.5"
+            onClick={start}
+            iconRight={ArrowRight}
+          >
             {data.action?.label || "Start Learning"}
           </Button>
         </div>

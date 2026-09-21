@@ -72,8 +72,25 @@ export default function Settings() {
 
   return (
     <>
-      <PageHeader icon={SettingsIcon} title="Profile & Settings" subtitle="Tell PISTA how you like to learn."
-        actions={<Button icon={Save} onClick={save} loading={saving} disabled={!dirty}>Save changes</Button>} />
+      <PageHeader
+        icon={SettingsIcon}
+        title="Profile & Settings"
+        subtitle={
+          dirty
+            ? "You have unsaved changes."
+            : "Tell PISTA how you like to learn."
+        }
+        actions={
+          <Button
+            icon={Save}
+            onClick={save}
+            loading={saving}
+            disabled={!dirty}
+          >
+            Save changes
+          </Button>
+        }
+      />
 
       <div className="grid gap-5 lg:grid-cols-2">
         <section className="card p-6" aria-labelledby="profile-h">

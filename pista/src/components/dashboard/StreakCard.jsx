@@ -16,7 +16,7 @@ export default function StreakCard({ days, loading }) {
           const done = i <= todayIdx && back < days;
           return (
             <div key={i} className="flex flex-col items-center gap-1.5">
-              <span className={`h-7 w-7 rounded-full ${done ? "bg-gradient-to-br from-amber-500 to-coral-500" : "bg-ink-900/[.06]"} ${i === todayIdx ? "ring-2 ring-amber-500/40 ring-offset-2" : ""}`} />
+              <span className={`h-7 w-7 rounded-full transition-all duration-200 ${done ? "bg-gradient-to-br from-amber-500 to-coral-500" : "bg-ink-900/[.06]"} ${i === todayIdx ? "ring-2 ring-amber-500/40 ring-offset-2" : ""}`} />
               <span className="text-[11px] font-medium text-muted">{d}</span>
             </div>
           );

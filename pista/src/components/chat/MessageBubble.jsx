@@ -30,18 +30,29 @@ function AssistantBody({ message, stopRequested, onRevealDone }) {
 
 function CopyButton({ text }) {
   const [copied, setCopied] = useState(false);
+  const [failed, setFailed] = useState(false);
+
   const copy = async () => {
+    setFailed(false);
+
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
-    } catch { /* clipboard unavailable */ }
+    } catch {
+      setFailed(true);
+      setTimeout(() => setFailed(false), 1500);
+    }
   };
   return (
     <button onClick={copy} className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-muted hover:bg-white hover:text-ink-900"
       aria-label="Copy response">
-      {copied ? <Check className="h-3.5 w-3.5 text-mint-500" /> : <Copy className="h-3.5 w-3.5" />}
-      {copied ? "Copied" : "Copy"}
+      {copied ? (
+        <Check className="h-3.5 w-3.5 text-mint-500" />
+      ) : (
+        <Copy className="h-3.5 w-3.5" />
+      )}
+      {copied ? "Copied" : failed ? "Copy failed" : "Copy"}
     </button>
   );
 }

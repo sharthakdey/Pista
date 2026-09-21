@@ -14,7 +14,9 @@
 }
 
 @layer components {
-  .card { @apply rounded-2xl border border-line bg-white shadow-card; }
+  .card {
+      @apply rounded-2xl border border-line bg-white shadow-card transition-shadow duration-200 ease-out;
+    }
   .input {
     @apply w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm text-ink-900
       placeholder:text-ink-400 transition focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-100;
