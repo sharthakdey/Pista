@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    @apply bg-surface font-sans text-ink-900 antialiased;
+    overflow-x: hidden;
+  }
+  h1, h2, h3, h4 { @apply font-display tracking-tight; }
+  :focus-visible { @apply outline-none ring-2 ring-electric-500 ring-offset-2 ring-offset-white; }
+  ::selection { background: #C4C8FF; }
+}
+
+@layer components {
+  .card { @apply rounded-2xl border border-line bg-white shadow-card; }
+  .input {
+    @apply w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm text-ink-900
+      placeholder:text-ink-400 transition focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-100;
+  }
+  .label { @apply mb-1.5 block text-sm font-semibold text-ink-800; }
+  .skeleton {
+    background: linear-gradient(90deg, #EBEEF7 0%, #F6F7FC 40%, #EBEEF7 80%);
+    background-size: 800px 100%;
+    @apply animate-shimmer rounded-lg;
+  }
+  .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background: #CDD2E6; border-radius: 99px; }
+  .path-draw { stroke-dasharray: var(--len, 1200); animation: draw 1.8s cubic-bezier(.65,0,.35,1) both; }
+}
+
+/* AI message typography */
+.prose-pista { @apply text-[15px] leading-7 text-ink-800; }
+.prose-pista > * + * { @apply mt-3; }
+.prose-pista h1, .prose-pista h2 { @apply mt-5 text-lg font-bold text-ink-900; }
+.prose-pista h3 { @apply mt-4 text-base font-bold text-ink-900; }
+.prose-pista h2:first-child, .prose-pista h3:first-child { @apply mt-0; }
+.prose-pista ul { @apply list-disc space-y-1 pl-5 marker:text-violet-500; }
+.prose-pista ol { @apply list-decimal space-y-1 pl-5 marker:font-semibold marker:text-brand-600; }
+.prose-pista strong { @apply font-semibold text-ink-900; }
+.prose-pista a { @apply font-medium text-electric-600 underline underline-offset-2; }
+.prose-pista code:not(pre code) { @apply rounded-md bg-brand-50 px-1.5 py-0.5 text-[13px] font-medium text-brand-700; }
+.prose-pista pre { @apply overflow-x-auto rounded-xl bg-ink-900 p-4 text-[13px] leading-6 text-ink-300; }
+.prose-pista blockquote { @apply rounded-r-xl border-l-4 border-violet-500 bg-violet-400/10 px-4 py-2.5 text-ink-800; }
+.prose-pista table { @apply block w-full overflow-x-auto text-sm; }
+.prose-pista th { @apply border-b border-line px-3 py-2 text-left font-semibold; }
+.prose-pista td { @apply border-b border-line px-3 py-2 align-top; }
+.prose-pista hr { @apply my-4 border-line; }
+.prose-pista .katex-display { @apply overflow-x-auto py-1; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
