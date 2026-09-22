@@ -25,7 +25,9 @@ export default function Dashboard() {
           <h1 className="text-[28px] font-bold leading-tight sm:text-[36px]">
             {greeting()}, {firstName} <span aria-hidden>👋</span>
           </h1>
-          <p className="mt-1.5 text-[15px] text-muted">Let's make today's study session count.</p>
+          <p className="mt-1.5 text-[15px] text-muted">
+            Here's what matters for your studies today.
+          </p>
         </div>
         <Button
           to="/tutor"

@@ -118,7 +118,7 @@ export default function RecommendationCard({ data, loading, error, onRetry }) {
             onClick={start}
             iconRight={ArrowRight}
           >
-            {data.action?.label || "Start Learning"}
+            {data.action?.label || "Study This Topic"}
           </Button>
         </div>
 

@@ -30,6 +30,14 @@
   .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
   .scrollbar-thin::-webkit-scrollbar-thumb { background: #CDD2E6; border-radius: 99px; }
   .path-draw { stroke-dasharray: var(--len, 1200); animation: draw 1.8s cubic-bezier(.65,0,.35,1) both; }
+    .path-draw {
+      stroke-dasharray: var(--len, 1200);
+      animation: draw 1.8s cubic-bezier(.65, 0, .35, 1) both;
+    }
+  
+    .path-glow {
+      filter: drop-shadow(0 0 6px rgba(47, 123, 255, 0.9));
+    }
 }
 
 /* AI message typography */
