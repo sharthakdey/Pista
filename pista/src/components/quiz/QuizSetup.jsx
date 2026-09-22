@@ -35,32 +35,39 @@ function scoreTone(score) {
 
 export default function QuizSetup({ progress, loading, error, onRetry, onGenerate, initialTopic }) {
   const subjects = progress?.subjects || [];
-  const [subjectId, setSubjectId] = useState("");
+  const [subject, setSubject] = useState(""); // ✅ free-text subject, no dropdown
   const [topic, setTopic] = useState("");
   const [difficulty, setDifficulty] = useState("medium");
   const [count, setCount] = useState(5);
   const [file, setFile] = useState(null);
   const fileInputRef = useRef(null);
 
+  // Pre-fill from weakest topic on first load (as text, not selection)
+    // Pre-fill from weakest topic ONCE on first load — then never fight the user's typing
+  const prefilled = useRef(false);
   useEffect(() => {
-    if (!progress || subjectId) return;
+    if (!progress || prefilled.current) return;
+    prefilled.current = true;
     const weak = progress.weakTopics?.[0];
     if (initialTopic) {
       setTopic(initialTopic);
     } else if (weak?.topic) {
       setTopic(weak.topic);
       const weakSubject = weak.subjectId || weak.subject;
-      // Only preselect if that subject actually exists in the list
-      if (subjects.some((s) => s.id === weakSubject)) setSubjectId(weakSubject);
+      const known = subjects.find((s) => s.id === weakSubject);
+      if (known) setSubject(known.name);
+      else if (weakSubject) setSubject(prettyName(weakSubject, subjects));
     } else if (subjects[0]) {
-      setSubjectId(subjects[0].id);
+      setSubject(subjects[0].name);
     }
-  }, [progress, subjectId, initialTopic, subjects]);
+  }, [progress, initialTopic, subjects]);
 
   if (error) return <ErrorState error={error} onRetry={onRetry} title="Quiz options didn't load" />;
   if (loading) return <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]"><CardSkeleton lines={6} /><CardSkeleton lines={4} /></div>;
 
-  const subjectName = subjects.find((s) => s.id === subjectId)?.name || (subjectId === "General" ? "General" : subjectId ? prettyName(subjectId, subjects) : "General");
+  const subjectName = subject.trim() || "General";
+  // Unique suggestions for the datalist (no duplicates ever)
+  const subjectSuggestions = Array.from(new Set([...subjects.map((s) => s.name), "General"]));
   const history = [...(progress?.quizHistory || [])].reverse().slice(0, 5);
   const canGenerate = topic.trim().length > 0 || !!file;
 
@@ -93,21 +100,24 @@ export default function QuizSetup({ progress, loading, error, onRetry, onGenerat
         <h2 className="text-xl font-bold">Build your quiz</h2>
         <p className="mt-1 text-sm text-muted">PISTA writes questions from your course material, or any custom topic you choose.</p>
 
-        {/* Full-width rows so segmented controls never squish or overlap */}
         <div className="mt-6 grid gap-5">
+          {/* ✅ MANUAL SUBJECT INPUT with autocomplete suggestions */}
           <div>
             <label htmlFor="quiz-subject" className="label">Subject</label>
-            <select id="quiz-subject" className="input" value={subjectId} onChange={(e) => setSubjectId(e.target.value)}>
-              {!subjects.some((s) => s.id === subjectId) && (
-                <option key="empty" value="">
-                  {subjects.length ? "Select a subject (optional)…" : "No subjects yet — just type a topic below"}
-                </option>
-              )}
-              {subjects.map((s) => (
-                <option key={s.id} value={s.id}>{s.name}</option>
+            <input
+              id="quiz-subject"
+              className="input"
+              list="quiz-subject-suggestions"
+              placeholder="Type any subject (e.g. DBMS, Operating Systems, Chemistry)…"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+            />
+            <datalist id="quiz-subject-suggestions">
+              {subjectSuggestions.map((name) => (
+                <option key={name} value={name} />
               ))}
-              <option key="general" value="General">General / Other</option>
-            </select>
+            </datalist>
+            <p className="mt-1.5 text-xs text-muted">Optional — type anything you like, or pick a suggestion. Empty means "General".</p>
           </div>
 
           <div>

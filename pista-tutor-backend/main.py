@@ -400,15 +400,36 @@ def student_me(x_student_id: Optional[str] = Header(None)):
             enable_cross_partition_query=True))
     except Exception:
         quiz_docs = []
+        
     progress = doc.get("progress", []) or []
     mastered = sum(1 for p in progress if (p.get("masteryLevel", p.get("mastery", 0)) or 0) >= 70)
+    
+    # 🚀 Reconstruct subjects list to prevent Settings.jsx crash
+    raw_subjects = doc.get("subjects", []) or []
+    subj_map = {}
+    for s in raw_subjects:
+        sid = s.get("subjectId") or s.get("id")
+        if sid:
+            subj_map[sid] = {"id": sid, "name": s.get("subjectName") or s.get("name") or _pretty(sid)}
+    for p in progress:
+        sid = p.get("subjectId") or p.get("subject") or "general"
+        subj_map.setdefault(sid, {"id": sid, "name": _pretty(sid)})
+    subjects = list(subj_map.values())
+
+    # Ensure preferences has defaults so Settings doesn't crash on missing keys
+    prefs = doc.get("preferences", {}) or {}
+    prefs.setdefault("explanationStyle", "step-by-step")
+    prefs.setdefault("sessionLength", 45)
+    prefs.setdefault("dailyGoalMinutes", 60)
+
     return {
         "id": doc.get("id", student_id),
         "name": doc.get("name", "Student"),
         "program": doc.get("program", ""),
         "semester": doc.get("semester", ""),
         "branch": doc.get("branch", ""),
-        "preferences": doc.get("preferences", {}) or {},
+        "subjects": subjects,      # <--- CRITICAL: Fixes Settings crash
+        "preferences": prefs,      # <--- CRITICAL: Provides defaults
         "stats": {
             "streakDays": doc.get("streakDays", 0),
             "studyHours": doc.get("studyHours", 0),
@@ -416,7 +437,6 @@ def student_me(x_student_id: Optional[str] = Header(None)):
             "topicsMastered": mastered,
         },
     }
-
 
 @app.get("/progress")
 def progress_me(x_student_id: Optional[str] = Header(None)):
@@ -733,48 +753,70 @@ RECENT PROGRESS & MASTERY:
 
 @app.get("/recommendations/today")
 def recommendation_today(x_student_id: Optional[str] = Header(None)):
+    """Rule-based daily plan — ZERO AI tokens. Pure Cosmos DB math."""
     student_id = x_student_id or "student-001"
-    
-    exams = T.get_upcoming_exams(students, student_id)
-    weak_topics = T.get_weak_topics(students, student_id)
-    
-    snapshot = f"""--- STUDENT CONTEXT SNAPSHOT ---
-UPCOMING EXAMS: {json.dumps(exams)}
-WEAK TOPICS: {json.dumps(weak_topics)}
---------------------------------"""
-    
-    prompt = "Based on my context snapshot, what exactly should I study today and why? Give me a focused, encouraging daily plan."
-    
-    input_messages = [
-        to_message_item("system", snapshot),
-        to_message_item("user", prompt)
-    ]
-    
-    try:
-        response = openai_client.responses.create(
-            input=input_messages,
-            extra_body={
-                "agent_reference": {
-                    "name": "Pista-Guide", 
-                    "version": "1", 
-                    "type": "agent_reference"
-                }
-            },
-        )
-        ai_reply = response.output_text
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Guide Agent Error: {str(e)}")
-        
-    return {
-        "kind": "focus",
-        "subject": weak_topics[0].get("subjectId", "General") if weak_topics else "General",
-        "topic": weak_topics[0].get("topic", "Review") if weak_topics else "Review",
-        "title": "Today's Study Plan",
-        "message": ai_reply,
-        "reasons": [{"type": "progress", "label": "Based on your recent quiz scores"}],
-        "action": {"label": "Start Studying", "prompt": ai_reply}
-    }
+    doc = T.get_student_context(students, student_id) or {}
+    exams = doc.get("exams", []) or []
+    weak = doc.get("weakTopics", []) or []
 
+    now = datetime.now(timezone.utc)
+
+    # 1. Nearest upcoming exam
+    next_exam, best_days = None, None
+    for e in exams:
+        try:
+            d = datetime.fromisoformat(str(e.get("date", "")).replace("Z", "+00:00"))
+            days = (d - now).days
+            if days >= 0 and (best_days is None or days < best_days):
+                best_days, next_exam = days, e
+        except Exception:
+            continue
+
+    # 2. Weakest topic (high priority first, then lowest mastery)
+    prio = {"high": 0, "medium": 1, "low": 2}
+    weakest = None
+    if weak:
+        weakest = sorted(
+            weak,
+            key=lambda w: (prio.get(w.get("priority") or w.get("weaknessLevel") or "medium", 1),
+                           w.get("mastery", w.get("masteryLevel", 0))),
+        )[0]
+
+    reasons = []
+    if weakest:
+        topic = _pretty(weakest.get("topic"))
+        subj = _pretty(weakest.get("subjectId") or weakest.get("subject"))
+        mastery = weakest.get("mastery", weakest.get("masteryLevel", 0))
+        kind, title = "review", "Shore up your weakest topic"
+        message = (f"Your weakest area right now is {topic} ({subj}) at {mastery}% mastery. "
+                   f"Spend ~30 minutes re-learning it with the Tutor, then take a 5-question quiz to lock it in.")
+        reasons.append({"type": "weak", "label": f"{topic} is at {mastery}% mastery"})
+        action_prompt = f"Teach me {topic} from {subj} step by step, focusing on my weak areas."
+    elif next_exam:
+        subj = _pretty(next_exam.get("subject"))
+        kind, topic, title = "focus", subj, f"{subj} exam in {best_days} day(s)"
+        message = (f"Your {subj} exam is on {str(next_exam.get('date'))[:10]} ({best_days} day(s) away). "
+                   f"Review your uploaded {subj} notes and take a practice quiz today.")
+        reasons.append({"type": "exam", "label": f"{subj} exam in {best_days} days"})
+        action_prompt = f"Create a study plan for my {subj} exam in {best_days} days."
+    else:
+        kind, topic, subj, title = "focus", "Mixed revision", "General", "Keep the streak alive"
+        message = "No weak topics and no upcoming exams. Take a mixed 5-question quiz to keep your memory fresh."
+        reasons.append({"type": "progress", "label": "All topics above target"})
+        action_prompt = "Give me a mixed revision quiz on my recent topics."
+
+    if next_exam and weakest:
+        reasons.append({"type": "exam", "label": f"{_pretty(next_exam.get('subject'))} exam in {best_days} days"})
+
+    return {
+        "kind": kind,
+        "subject": subj if weakest is None and next_exam is None else (subj if not weakest else _pretty(weakest.get("subjectId") or weakest.get("subject"))),
+        "topic": topic,
+        "title": title,
+        "message": message,
+        "reasons": reasons,
+        "action": {"label": "Start now", "prompt": action_prompt},
+    }
 
 # --- Database Tool Endpoints ---
 
@@ -928,3 +970,76 @@ Return ONLY valid JSON:
 
     students.upsert_item(doc)
     return {"saved": len(saved), "exams": saved}
+
+@app.get("/exams/export-ics")
+def export_exams_ics(x_student_id: Optional[str] = Header(None)):
+    """Generate an ICS calendar file with all the student's exams."""
+    student_id = x_student_id or "student-001"
+    doc = T.get_student_context(students, student_id) or {}
+    exams = doc.get("exams", []) or []
+    
+    if not exams:
+        raise HTTPException(status_code=404, detail="No exams to export.")
+    
+    # ICS file format (RFC 5545)
+    ics_lines = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//Pista Tutor//Exam Calendar//EN",
+        "CALSCALE:GREGORIAN",
+        "METHOD:PUBLISH",
+        "X-WR-CALNAME:PISTA Study Exams",
+        "X-WR-TIMEZONE:Asia/Kolkata",
+    ]
+    
+    for exam in exams:
+        date_str = exam.get("date", "")
+        subject = exam.get("subject", "Exam")
+        title = exam.get("title", "Exam")
+        
+        # Parse the date (handle both ISO and simple formats)
+        try:
+            if "T" in date_str:
+                dt = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
+            else:
+                dt = datetime.strptime(date_str, "%Y-%m-%d")
+        except Exception:
+            continue  # Skip malformed dates
+        
+        # Format for ICS (YYYYMMDD)
+        dt_start = dt.strftime("%Y%m%d")
+        dt_end = dt.strftime("%Y%m%d")
+        
+        # Create a unique ID for this event
+        event_uid = f"{exam.get('id', '')}@pista-tutor"
+        
+        # Add the event with a reminder (1 day before + 1 hour before)
+        ics_lines.extend([
+            "BEGIN:VEVENT",
+            f"UID:{event_uid}",
+            f"DTSTART;VALUE=DATE:{dt_start}",
+            f"DTEND;VALUE=DATE:{dt_end}",
+            f"SUMMARY:{subject} - {title}",
+            f"DESCRIPTION:Exam for {subject}. Prepare with PISTA!",
+            "BEGIN:VALARM",
+            "TRIGGER:-P1D",
+            "DESCRIPTION:Reminder",
+            "ACTION:DISPLAY",
+            "END:VALARM",
+            "BEGIN:VALARM",
+            "TRIGGER:-PT1H",
+            "DESCRIPTION:Reminder",
+            "ACTION:DISPLAY",
+            "END:VALARM",
+            "END:VEVENT",
+        ])
+    
+    ics_lines.append("END:VCALENDAR")
+    ics_content = "\r\n".join(ics_lines)
+    
+    from fastapi.responses import Response
+    return Response(
+        content=ics_content,
+        media_type="text/calendar",
+        headers={"Content-Disposition": "attachment; filename=pista-exams.ics"}
+    )

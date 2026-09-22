@@ -13,6 +13,8 @@ import { CardSkeleton } from "../components/ui/Skeleton.jsx";
 import { EmptyState, ErrorState } from "../components/ui/StateViews.jsx";
 import { daysUntil, formatDate, formatTime } from "../utils/dates.js";
 import DatesheetUpload from "../components/exams/DatesheetUpload.jsx";
+import { Download } from "lucide-react";
+import { API_BASE_URL } from "../config.js";
 
 function urgencyOf(days) {
   if (days <= 5) {
@@ -98,7 +100,7 @@ function AddExamModal({ open, onClose }) {
     } catch (err) {
       setError(
         err?.userMessage ||
-          "The exam couldn't be added. Please try again."
+        "The exam couldn't be added. Please try again."
       );
     } finally {
       setSaving(false);
@@ -302,12 +304,16 @@ export default function Exams() {
         title="Upcoming Exams"
         subtitle="PISTA plans your study sessions around these dates."
         actions={
-          <Button
-            icon={Plus}
-            onClick={() => setOpen(true)}
-          >
-            Add Exam
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              icon={Download}
+              variant="secondary"
+              onClick={() => window.open(`${API_BASE_URL}/exams/export-ics`, '_blank')}
+            >
+              Export Calendar
+            </Button>
+            <Button icon={Plus} onClick={() => setOpen(true)}>Add Exam</Button>
+          </div>
         }
       />
 
