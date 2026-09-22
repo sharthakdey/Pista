@@ -4,7 +4,7 @@ import { NAV_ITEMS } from "./navItems.js";
 import Logo, { LogoMark } from "../ui/Logo.jsx";
 import Avatar from "../ui/Avatar.jsx";
 import { useStudy } from "../../context/StudyContext.jsx";
-
+import LogoutButton from "./LogOutButton.jsx";
 /**
  * Desktop: full sidebar. Tablet: icon rail (`collapsed`) that can expand as an overlay.
  */
@@ -95,7 +95,7 @@ export default function Sidebar({ collapsed = false, onToggle, onNavigate, showT
         )}
       </nav>
 
-      <div className="border-t border-white/[.06] p-3">
+            <div className="border-t border-white/[.06] p-3">
         {demoMode && !collapsed && (
           <Link to="/settings" onClick={onNavigate}
             className="mb-2 flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs text-ink-400 hover:text-ink-300">
@@ -103,6 +103,7 @@ export default function Sidebar({ collapsed = false, onToggle, onNavigate, showT
             Demo data
           </Link>
         )}
+
         <Link to="/settings" onClick={onNavigate}
           className={`flex items-center gap-3 rounded-xl p-2 transition hover:bg-white/[.05] ${collapsed ? "justify-center" : ""}`}
           aria-label="Student profile">
@@ -110,10 +111,19 @@ export default function Sidebar({ collapsed = false, onToggle, onNavigate, showT
           {!collapsed && (
             <span className="min-w-0">
               <span className="block truncate text-sm font-semibold text-white">{student?.name || "Student"}</span>
-              <span className="block truncate text-xs text-ink-400">{student?.semester || "Loading profile…"}</span>
+              <span className="block truncate text-xs text-ink-400">
+                {student?.semester
+                  ? `Semester ${student.semester}${student?.branch ? ` • ${student.branch}` : ""}`
+                  : "PISTA student"}
+              </span>
             </span>
           )}
         </Link>
+
+        {/* ✅ The logout button, finally rendered */}
+        <div className={`mt-1 ${collapsed ? "flex justify-center" : ""}`}>
+          <LogoutButton iconOnly={collapsed} />
+        </div>
       </div>
     </aside>
   );
