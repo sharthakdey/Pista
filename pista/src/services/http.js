@@ -33,12 +33,19 @@ export function setStudentId(id) {
   try { localStorage.setItem(STUDENT_ID_KEY, id); } catch { /* ignore */ }
 }
 
+// ✅ ONLY ONE buildHeaders function with auth token support
 function buildHeaders(extra = {}, json = true) {
   const headers = { Accept: "application/json", ...extra };
   if (json) headers["Content-Type"] = "application/json";
   const studentId = getStudentId();
-  // Identifies the student to the backend. Not a secret; real auth can replace this later.
   if (studentId) headers["X-Student-Id"] = studentId;
+  
+  // Auth token support
+  try {
+    const token = localStorage.getItem("pista:token");
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+  } catch { /* ignore */ }
+  
   return headers;
 }
 

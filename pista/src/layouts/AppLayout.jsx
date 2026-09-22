@@ -1,5 +1,5 @@
 import { Suspense, useEffect, useState } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import Sidebar from "../components/layout/Sidebar.jsx";
 import { MobileHeader, BottomNav } from "../components/layout/MobileNav.jsx";
 import Toasts from "../components/ui/Toasts.jsx";
@@ -9,17 +9,27 @@ const FULL_BLEED = ["/tutor"];
 
 export default function AppLayout() {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const [tabletOpen, setTabletOpen] = useState(false);
 
-  // NEW: desktop sidebar state
+  // desktop sidebar state
   const [desktopCollapsed, setDesktopCollapsed] = useState(false);
 
+  // 🔐 AUTH GUARD: no token → straight to /login
+  const authed = !!localStorage.getItem("pista:token");
+
   const fullBleed = FULL_BLEED.includes(pathname);
+
+  useEffect(() => {
+    if (!authed) navigate("/login", { replace: true });
+  }, [authed, navigate]);
 
   useEffect(() => {
     setTabletOpen(false);
     if (!fullBleed) window.scrollTo({ top: 0 });
   }, [pathname, fullBleed]);
+
+  if (!authed) return null; // guard: render nothing while redirecting
 
   return (
     <div className="min-h-dvh bg-surface">

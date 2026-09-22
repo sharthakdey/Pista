@@ -119,6 +119,115 @@ def _upsert_exam(doc, exam):
     return doc, True
 
 
+# --- BASIC AUTH (token-based, no extra dependencies) ---
+import hashlib, hmac, base64, secrets
+from starlette.datastructures import MutableHeaders
+from starlette.requests import Request
+from starlette.responses import JSONResponse
+
+AUTH_SECRET = os.environ.get("AUTH_SECRET", "pista-demo-secret")
+REQUIRE_AUTH = False  # set True later to hard-block unauthenticated API calls
+PUBLIC_PATHS = {"/", "/auth/login", "/auth/register", "/docs", "/openapi.json", "/favicon.ico"}
+
+def _hash_password(password: str, salt: str) -> str:
+    return hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100_000).hex()
+
+def _make_token(student_id: str) -> str:
+    payload = base64.urlsafe_b64encode(student_id.encode()).decode()
+    sig = hmac.new(AUTH_SECRET.encode(), payload.encode(), hashlib.sha256).hexdigest()
+    return f"{payload}.{sig}"
+
+def _verify_token(token: str):
+    try:
+        payload, sig = token.split(".", 1)
+        expected = hmac.new(AUTH_SECRET.encode(), payload.encode(), hashlib.sha256).hexdigest()
+        if hmac.compare_digest(sig, expected):
+            return base64.urlsafe_b64decode(payload.encode()).decode()
+    except Exception:
+        pass
+    return None
+
+@app.middleware("http")
+async def resolve_student(request: Request, call_next):
+    auth = request.headers.get("authorization") or ""
+    sid = _verify_token(auth[7:]) if auth.startswith("Bearer ") else None
+    if sid:
+        MutableHeaders(scope=request.scope)["x-student-id"] = sid
+    elif REQUIRE_AUTH and request.url.path not in PUBLIC_PATHS:
+        return JSONResponse({"detail": "Not authenticated"}, status_code=401)
+    return await call_next(request)
+
+class RegisterIn(BaseModel):
+    name: str
+    email: str
+    password: str
+
+class LoginIn(BaseModel):
+    email: str
+    password: str
+
+@app.post("/auth/register")
+def register(body: RegisterIn):
+    if len(body.password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters.")
+    sid = "stu-" + _slug(body.email.strip().lower())
+    try:
+        students.read_item(item=sid, partition_key=sid)
+        raise HTTPException(status_code=400, detail="An account with this email already exists.")
+    except HTTPException:
+        raise
+    except Exception:
+        pass
+    salt = secrets.token_hex(8)
+    doc = {
+        "id": sid,
+        "name": body.name.strip() or "Student",
+        "email": body.email.strip().lower(),
+        "salt": salt,
+        "passwordHash": _hash_password(body.password, salt),
+        "subjects": [], "progress": [], "weakTopics": [], "exams": [],
+        "preferences": {"explanationStyle": "step-by-step", "sessionLength": 45, "dailyGoalMinutes": 60},
+    }
+    students.upsert_item(doc)
+    return {"token": _make_token(sid), "studentId": sid, "name": doc["name"]}
+
+@app.post("/auth/login")
+def login(body: LoginIn):
+    email = body.email.strip().lower()
+    sid = "student-001" if email == "demo@pista.app" else "stu-" + _slug(email)
+    try:
+        doc = students.read_item(item=sid, partition_key=sid)
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid email or password.")
+    if _hash_password(body.password, doc.get("salt", "")) != doc.get("passwordHash"):
+        raise HTTPException(status_code=401, detail="Invalid email or password.")
+    return {"token": _make_token(sid), "studentId": sid, "name": doc.get("name", "Student")}
+
+@app.get("/auth/me")
+def auth_me(x_student_id: Optional[str] = Header(None)):
+    sid = x_student_id or "student-001"
+    try:
+        doc = students.read_item(item=sid, partition_key=sid)
+    except Exception:
+        doc = {}
+    return {"id": sid, "name": doc.get("name", "Student"), "email": doc.get("email", "")}
+
+def ensure_demo_account():
+    """Seeds demo@pista.app / demo123 onto your existing student-001 data."""
+    sid = "student-001"
+    try:
+        doc = students.read_item(item=sid, partition_key=sid)
+    except Exception:
+        doc = {"id": sid, "name": "Demo Student", "subjects": [], "progress": [], "weakTopics": [], "exams": []}
+    if not doc.get("passwordHash"):
+        salt = secrets.token_hex(8)
+        doc["email"] = "demo@pista.app"
+        doc["salt"] = salt
+        doc["passwordHash"] = _hash_password("demo123", salt)
+        students.upsert_item(doc)
+
+ensure_demo_account()
+
 # --- Core Endpoints ---
 
 @app.get("/")
